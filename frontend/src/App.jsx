@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import './index.css'
 import TrailMateHero from './TrailMateHero'
+import TrailMateChat from "./components/TrailMateChat";
 
 function App() {
   const [searchQuery, setSearchQuery] = useState('')
@@ -188,6 +189,7 @@ function App() {
                       </div>
 
                     </div>
+                    <TrailMateChat hikingContext={guide} />
                   </div>
                 </div>
               )
