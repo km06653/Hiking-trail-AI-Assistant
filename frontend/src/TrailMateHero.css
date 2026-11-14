@@ -1,0 +1,368 @@
+@import url("https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap");
+
+.trailmate-hero,
+.trailmate-hero * {
+  box-sizing: border-box;
+}
+
+.trailmate-hero {
+  position: relative;
+  min-height: 780px;
+  min-height: max(780px, 100svh);
+  overflow: hidden;
+  color: white;
+  font-family: "DM Sans", sans-serif;
+
+  background:
+    linear-gradient(
+      90deg,
+      rgba(9, 28, 22, 0.75),
+      rgba(9, 28, 22, 0.12)
+    ),
+    linear-gradient(
+      0deg,
+      rgba(9, 28, 22, 0.55),
+      transparent 60%
+    ),
+    url("https://images.unsplash.com/photo-1472396961693-142e6e269027?auto=format&fit=crop&w=2400&q=85")
+      center 53% / cover;
+}
+
+.trailmate-hero a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.trailmate-hero button,
+.trailmate-hero input {
+  font: inherit;
+}
+
+.trailmate-hero button {
+  cursor: pointer;
+}
+
+.trailmate-hero :focus-visible {
+  outline: 3px solid #daef9b;
+  outline-offset: 5px;
+}
+
+/* Navigation */
+
+.trailmate-nav {
+  width: 100%;
+  max-width: 1600px;
+  height: 104px;
+  margin: auto;
+  padding: 0 6%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+}
+
+.trailmate-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-family: "Manrope", sans-serif;
+  font-size: 27px;
+  font-weight: 800;
+  letter-spacing: -1px;
+}
+
+.trailmate-brand svg {
+  width: 40px;
+  height: 40px;
+}
+
+.trailmate-ai {
+  padding: 5px 7px;
+  border: 1px solid #ffffff70;
+  border-radius: 6px;
+  font-size: 11px;
+  letter-spacing: 1px;
+}
+
+.trailmate-links {
+  display: flex;
+  align-items: center;
+  gap: 34px;
+  font-size: 14px;
+}
+
+.trailmate-links .active {
+  padding-bottom: 7px;
+  border-bottom: 1px solid #d7e7ba;
+}
+
+.saved-places {
+  padding: 13px 23px;
+  border: 1px solid #ffffff70;
+  border-radius: 30px;
+  background: #ffffff0b;
+  color: white;
+}
+
+.saved-places:hover {
+  background: #ffffff20;
+}
+
+/* Heading */
+
+.trailmate-content {
+  width: 100%;
+  max-width: 1600px;
+  margin: 75px auto 0;
+  padding: 0 9% 180px;
+}
+
+.trailmate-eyebrow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+}
+
+.trailmate-eyebrow::before {
+  content: "";
+  width: 24px;
+  height: 1px;
+  background: currentColor;
+}
+
+.trailmate-content h1 {
+  margin: 30px 0 25px;
+  font-family: "Manrope", sans-serif;
+  font-size: clamp(48px, 5.6vw, 86px);
+  font-weight: 500;
+  line-height: 1.08;
+  letter-spacing: -4px;
+}
+
+.trailmate-content h1 em {
+  color: #e0edc6;
+  font-family: Georgia, serif;
+  font-weight: 400;
+}
+
+.trailmate-description {
+  max-width: 470px;
+  color: #e0e5db;
+  font-size: 16px;
+  line-height: 1.8;
+}
+
+/* Search */
+
+.trailmate-search {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  width: 100%;
+  max-width: 770px;
+  margin-top: 36px;
+  padding: 9px;
+  border-radius: 15px;
+  background: white;
+  color: #243e30;
+  box-shadow: 0 15px 40px #0d24142b;
+}
+
+.search-location {
+  flex-shrink: 0;
+  width: 24px;
+  height: 24px;
+  margin-left: 15px;
+  color: #738476;
+}
+
+.trailmate-search input {
+  flex: 1;
+  width: 0;
+  min-width: 0;
+  padding: 17px 0;
+  border: 0;
+  border-radius: 4px;
+  background: transparent;
+  color: #20372b;
+  font-size: 15px;
+}
+
+.trailmate-search input::placeholder {
+  color: #8a9188;
+}
+
+.trailmate-search button {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+  padding: 21px 25px;
+  border: 0;
+  border-radius: 10px;
+  background: #daef9b;
+  color: #263d2b;
+  font-weight: 700;
+  transition: background 0.2s;
+}
+
+.trailmate-search button:hover {
+  background: #cbe584;
+}
+
+.trailmate-search button span {
+  font-size: 23px;
+  line-height: 1;
+}
+
+/* Suggested destinations */
+
+.trailmate-suggestions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 9px;
+  margin-top: 18px;
+  color: #e0e6dd;
+  font-size: 12px;
+}
+
+.trailmate-suggestions > span {
+  margin-right: 3px;
+}
+
+.trailmate-suggestions button {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 8px 14px;
+  border: 1px solid #ffffff45;
+  border-radius: 30px;
+  background: #ffffff0d;
+  color: white;
+  font-size: 12px;
+  transition: background 0.2s;
+}
+
+.trailmate-suggestions button:hover {
+  background: #ffffff25;
+}
+
+/* Bottom details */
+
+.trailmate-scroll {
+  position: absolute;
+  bottom: 38px;
+  left: 9%;
+  font-size: 10px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+}
+
+.trailmate-caption {
+  position: absolute;
+  right: 6%;
+  bottom: 32px;
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  font-size: 11px;
+  letter-spacing: 1px;
+}
+
+.trailmate-caption p {
+  margin: 0;
+  padding-left: 15px;
+  border-left: 1px solid #ffffff60;
+  line-height: 1.9;
+}
+
+/* Mobile */
+
+@media (max-width: 750px) {
+  .trailmate-nav {
+    height: 85px;
+  }
+
+  .trailmate-brand {
+    gap: 7px;
+    font-size: 21px;
+  }
+
+  .trailmate-brand svg {
+    width: 31px;
+    height: 31px;
+  }
+
+  .trailmate-links > a {
+    display: none;
+  }
+
+  .saved-places {
+    padding: 10px 13px;
+    font-size: 12px;
+  }
+
+  .trailmate-content {
+    margin-top: 65px;
+    padding: 0 6% 190px;
+  }
+
+  .trailmate-eyebrow {
+    font-size: 9px;
+    letter-spacing: 2px;
+  }
+
+  .trailmate-content h1 {
+    font-size: clamp(42px, 8vw, 60px);
+    letter-spacing: -2.5px;
+  }
+
+  .trailmate-description {
+    max-width: 350px;
+    font-size: 14px;
+  }
+
+  .trailmate-search {
+    flex-wrap: wrap;
+    gap: 10px;
+    padding: 10px;
+  }
+
+  .search-location {
+    margin-left: 5px;
+  }
+
+  .trailmate-search input {
+    font-size: 13px;
+  }
+
+  .trailmate-search button {
+    justify-content: center;
+    width: 100%;
+    padding: 16px;
+    font-size: 14px;
+  }
+
+  .trailmate-scroll {
+    left: 6%;
+    bottom: 27px;
+  }
+
+  .trailmate-caption {
+    left: 6%;
+    right: auto;
+    bottom: 66px;
+    font-size: 9px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .trailmate-hero * {
+    transition: none !important;
+  }
+}
