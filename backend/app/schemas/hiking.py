@@ -1,4 +1,3 @@
-
 from datetime import date
 
 from pydantic import BaseModel, Field
@@ -149,8 +148,8 @@ class WeatherInfo(BaseModel):
     weather_code: int
     weather_summary: str
 
-    temperature_unit: str = "°C"
-    wind_speed_unit: str = "km/h"
+    temperature_unit: str = "°F"
+    wind_speed_unit: str = "mph"
 
     source: str = "Open-Meteo"
 
@@ -162,6 +161,10 @@ class WeatherInfo(BaseModel):
 class HikingResponse(BaseModel):
     destination: str
     overview: str
+
+    hero_image: str = Field(
+        description="A real, working public URL to a beautiful, high-quality image of this specific destination (e.g., from Wikimedia Commons)."
+    )
 
     trails: list[Trail]
     packing_list: list[PackingItem]
