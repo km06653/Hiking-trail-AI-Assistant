@@ -1,7 +1,9 @@
+
 import httpx
 from datetime import date
 
 OPEN_METEO_URL = "https://api.open-meteo.com/v1/forecast"
+GEOCODING_URL = "https://geocoding-api.open-meteo.com/v1/search"
 
 
 def get_weather_description(code: int) -> str:
@@ -34,6 +36,69 @@ def get_weather_description(code: int) -> str:
     return descriptions.get(code, "Unknown conditions")
 
 
+
+def get_coordinates(location: str) -> dict:
+    """
+    Find coordinates for a hiking destination.
+    Tries the full name first, then a simplified name.
+    """
+
+    import re
+
+    # Remove common park and reserve suffixes.
+    simplified_location = re.sub(
+        r"\b(state natural reserve|national park|state park|"
+        r"state beach|regional park|nature reserve|"
+        r"natural reserve|wilderness area)\b",
+        "",
+        location,
+        flags=re.IGNORECASE
+    )
+
+    simplified_location = " ".join(simplified_location.split()).strip(" ,")
+
+    # Try the original name first, then the simplified name.
+    search_names = [location]
+
+    if simplified_location and simplified_location.lower() != location.lower():
+        search_names.append(simplified_location)
+
+    # Add California as a qualifier if it isn't already specified.
+    for name in search_names:
+        if "california" not in name.lower():
+            name = f"{name}, California"
+
+        params = {
+            "name": name,
+            "count": 10,
+            "language": "en",
+            "format": "json",
+            "countryCode": "US",
+        }
+
+        response = httpx.get(
+            GEOCODING_URL,
+            params=params,
+            timeout=httpx.Timeout(30.0, connect=20.0)
+        )
+
+        response.raise_for_status()
+
+        results = response.json().get("results", [])
+
+        if results:
+            place = results[0]
+
+            return {
+                "latitude": place["latitude"],
+                "longitude": place["longitude"],
+                "name": place["name"],
+            }
+
+    raise ValueError(f"Could not find coordinates for {location}")
+
+
+
 def get_weather(
     latitude: float,
     longitude: float,
@@ -55,22 +120,23 @@ def get_weather(
         ),
         "temperature_unit": "fahrenheit",
         "wind_speed_unit": "mph",
-        "timezone": "auto", 
+        "timezone": "auto",
         "start_date": forecast_date.isoformat(),
         "end_date": forecast_date.isoformat(),
     }
 
     response = httpx.get(
-    OPEN_METEO_URL,
-    params=params,
-    timeout=httpx.Timeout(
-        30.0,
-        connect=20.0
+        OPEN_METEO_URL,
+        params=params,
+        timeout=httpx.Timeout(
+            30.0,
+            connect=20.0
+        )
     )
-)
-    response.raise_for_status()
-    data = response.json()
 
+    response.raise_for_status()
+
+    data = response.json()
     daily = data.get("daily", {})
 
     if not daily.get("time"):

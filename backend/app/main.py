@@ -6,7 +6,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.schemas.hiking import HikingRequest, HikingResponse, WeatherInfo
 from app.services.gemini_service import generate_hiking_guide
-from app.services.weather_service import get_weather
+from app.services.weather_service import get_weather, get_coordinates
 
 
 app = FastAPI(
@@ -61,46 +61,38 @@ def get_trailhead_weather(
 # Main hiking guide endpoint
 @app.post("/api/hike-guide", response_model=HikingResponse)
 def create_hiking_guide(request: HikingRequest):
-
     try:
-        # Generate the hiking guide using Gemini
         result = generate_hiking_guide(request.message)
-
-        # Weather comes from Open-Meteo, not Gemini
         result["weather"] = None
 
-        # Retrieve weather if coordinates are provided
-        if request.latitude is not None or request.longitude is not None:
+        try:
+            # Extract the destination from Gemini's response.
+            destination = result["destination"]
 
-            # Both coordinates are required
-            if request.latitude is None or request.longitude is None:
-                raise HTTPException(
-                    status_code=422,
-                    detail="Both latitude and longitude are required."
-                )
+            # Automatically find the destination coordinates.
+            location = get_coordinates(destination)
 
-            # A trailhead name is required
-            if not request.trailhead_name:
-                raise HTTPException(
-                    status_code=422,
-                    detail="A trailhead name is required for weather."
-                )
+            # Retrieve the weather forecast.
+            result["weather"] = get_weather(
+                latitude=location["latitude"],
+                longitude=location["longitude"],
+                trailhead_name=location["name"],
+                hike_date=request.hike_date
+            )
 
-            try:
-                result["weather"] = get_weather(
-                    latitude=request.latitude,
-                    longitude=request.longitude,
-                    trailhead_name=request.trailhead_name,
-                    hike_date=request.hike_date
-                )
-
-            except Exception as weather_error:
-                print(f"Weather error: {weather_error}")
-
-                # Keep the hiking guide available if weather fails
-                result["weather"] = None
+        except Exception as weather_error:
+            print(f"Weather error: {weather_error}")
+            result["weather"] = None
 
         return result
+
+    except Exception as error:
+        print(f"Gemini error: {error}")
+        raise HTTPException(
+            status_code=502,
+            detail="Unable to generate hiking guide."
+        )
+
 
     except HTTPException:
         raise
