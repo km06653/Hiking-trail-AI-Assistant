@@ -1,22 +1,35 @@
-
 from datetime import date
 import logging
 
 from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
+from pydantic import BaseModel
 
-from app.schemas.hiking import HikingRequest, HikingResponse, WeatherInfo
+from app.schemas.hiking import (
+    HikingRequest,
+    HikingResponse,
+    WeatherInfo,
+)
 from app.schemas.chat import ChatRequest, ChatResponse
 
 from app.services.gemini_service import (
     generate_hiking_guide,
     generate_weather_aware_packing_list,
 )
-from app.services.weather_service import get_weather, get_coordinates
+from app.services.weather_service import (
+    get_weather,
+    get_coordinates,
+)
 from app.services.chat_service import generate_chat_response
 
 
 logger = logging.getLogger(__name__)
+
+
+class VisitWeatherRequest(BaseModel):
+    hike_date: date
+    hiking_context: HikingResponse
+
 
 app = FastAPI(
     title="AI Hiking Assistant",
@@ -60,7 +73,7 @@ def get_trailhead_weather(
 
         raise HTTPException(
             status_code=502,
-            detail="Unable to retrieve a forecast for the requested date.",
+            detail="Unable to retrieve weather for the requested date.",
         ) from error
 
 
@@ -97,7 +110,6 @@ def create_hiking_guide(request: HikingRequest):
         result["destination_longitude"] = None
 
         try:
-            # Prefer exact coordinates if the request provides them.
             if request.latitude is not None and request.longitude is not None:
                 location = {
                     "latitude": request.latitude,
@@ -122,15 +134,15 @@ def create_hiking_guide(request: HikingRequest):
                 hike_date=weather_date,
             )
 
-            # Never use weather from a different date.
             if weather.get("forecast_date") != date_string:
                 raise ValueError(
                     "Forecast date does not match the selected visit date."
                 )
 
-            validated_weather = WeatherInfo.model_validate(weather)
+            result["weather"] = (
+                WeatherInfo.model_validate(weather).model_dump()
+            )
 
-            result["weather"] = validated_weather.model_dump()
             result["weather_status"] = "available"
             result["weather_message"] = f"Forecast for {date_string}."
 
@@ -141,7 +153,6 @@ def create_hiking_guide(request: HikingRequest):
                 error,
             )
 
-            # Do not fall back to today's weather.
             result["weather"] = None
             result["weather_status"] = "unavailable"
             result["weather_message"] = (
@@ -151,7 +162,6 @@ def create_hiking_guide(request: HikingRequest):
                 "Packing advice is general rather than forecast-based."
             )
 
-        # Generate packing advice using only matching weather.
         if result["weather"] is not None:
             try:
                 result["packing_list"] = (
@@ -169,18 +179,171 @@ def create_hiking_guide(request: HikingRequest):
                     error,
                 )
 
-                # Keep the original general packing list.
-                result["packing_status"] = "general"
+                # The forecast can still be used if Gemini is busy.
+                result["packing_list"] = packing_for_weather(
+                    result["weather"]
+                )
+                result["packing_status"] = "weather_aware"
 
         return result
 
     except Exception as error:
         logger.exception("Hiking guide generation failed")
 
+        if getattr(error, "code", None) == 503:
+            raise HTTPException(
+                status_code=503,
+                detail=(
+                    "The AI service is temporarily busy. "
+                    "Please try again shortly."
+                ),
+            ) from error
+
         raise HTTPException(
             status_code=502,
-            detail="Unable to generate hiking guide.",
+            detail="Unable to generate the hiking guide. Please try again.",
         ) from error
+
+
+def packing_for_weather(weather: dict) -> list[dict]:
+    """
+    Build a basic forecast-aware checklist without an AI request.
+
+    These are general preparation suggestions, not a complete
+    equipment assessment for every trail.
+    """
+
+    items = [
+        {
+            "item": "Water",
+            "reason": "Bring enough for your planned outing.",
+            "essential": True,
+        },
+        {
+            "item": "Walking shoes",
+            "reason": "Choose grip suited to the selected trails.",
+            "essential": True,
+        },
+        {
+            "item": "Layers",
+            "reason": "Prepare for temperature changes during your outing.",
+            "essential": True,
+        },
+        {
+            "item": "Offline map",
+            "reason": "Download your route before leaving reliable service.",
+            "essential": True,
+        },
+        {
+            "item": "Snacks",
+            "reason": "Bring food appropriate for the length of your visit.",
+            "essential": False,
+        },
+        {
+            "item": "Sun protection",
+            "reason": "Bring a hat and sunscreen for exposed sections.",
+            "essential": False,
+        },
+    ]
+
+    code = weather["weather_code"]
+
+    if (
+        weather["precipitation_probability"] >= 30
+        or 51 <= code <= 99
+    ):
+        items.append(
+            {
+                "item": "Waterproof outer layer",
+                "reason": (
+                    "Suggested for the selected day's "
+                    "precipitation forecast."
+                ),
+                "essential": True,
+            }
+        )
+
+    if weather["wind_speed_max"] >= 12:
+        items.append(
+            {
+                "item": "Wind protection",
+                "reason": (
+                    "Suggested for the selected day's wind forecast. "
+                    "A suitable rain shell may serve both purposes."
+                ),
+                "essential": False,
+            }
+        )
+
+    if weather["temperature_min"] < 45:
+        items.append(
+            {
+                "item": "Warm layer",
+                "reason": (
+                    "Suggested because the selected day's "
+                    "forecast low is below 45°F."
+                ),
+                "essential": True,
+            }
+        )
+
+    return items
+
+
+@app.post("/api/visit-weather", response_model=HikingResponse)
+def update_visit_weather(request: VisitWeatherRequest):
+    """
+    Update an existing guide's date and weather.
+
+    This endpoint never calls Gemini.
+    """
+
+    result = request.hiking_context.model_dump()
+    requested_date = request.hike_date.isoformat()
+
+    try:
+        location = get_coordinates(result["destination"])
+
+        weather = get_weather(
+            latitude=location["latitude"],
+            longitude=location["longitude"],
+            trailhead_name=location["name"],
+            hike_date=request.hike_date,
+        )
+
+        if weather.get("forecast_date") != requested_date:
+            raise ValueError(
+                "The returned forecast does not match the visit date."
+            )
+
+        weather = WeatherInfo.model_validate(weather).model_dump()
+
+    except Exception as error:
+        logger.warning(
+            "Visit weather update failed for %s: %s",
+            requested_date,
+            error,
+        )
+
+        raise HTTPException(
+            status_code=502,
+            detail=(
+                "Could not retrieve weather for the selected date. "
+                "Your previous guide has been kept. "
+                "The forecast may be unavailable or the weather "
+                "connection may have failed."
+            ),
+        ) from error
+
+    # Commit the new date and forecast together.
+    result["hike_date"] = requested_date
+    result["weather"] = weather
+    result["weather_status"] = "available"
+    result["weather_message"] = f"Forecast for {requested_date}."
+    result["packing_list"] = packing_for_weather(weather)
+    result["packing_status"] = "weather_aware"
+
+    return result
 
 
 @app.post("/api/chat", response_model=ChatResponse)
@@ -202,5 +365,5 @@ def chat_with_assistant(request: ChatRequest):
 
         raise HTTPException(
             status_code=502,
-            detail="Unable to generate chat response.",
+            detail="Unable to generate a chat response.",
         ) from error
