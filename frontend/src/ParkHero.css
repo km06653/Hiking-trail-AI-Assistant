@@ -1,0 +1,321 @@
+.park-cover,
+.park-cover * {
+  box-sizing: border-box;
+}
+
+.park-cover {
+  position: relative;
+  isolation: isolate;
+  width: 100%;
+  min-height: 560px;
+  overflow: hidden;
+  background: #243e30;
+  color: #fffefa;
+  border-radius: 0;
+}
+
+.park-cover-photo {
+  position: absolute;
+  inset: 0;
+  z-index: -3;
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+}
+
+.park-cover-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: -2;
+  background:
+    linear-gradient(
+      90deg,
+      rgba(15, 44, 30, 0.94) 0%,
+      rgba(19, 48, 33, 0.78) 28%,
+      rgba(19, 48, 33, 0.24) 65%,
+      rgba(19, 48, 33, 0.05) 100%
+    ),
+    linear-gradient(
+      180deg,
+      rgba(8, 24, 17, 0.35) 0%,
+      transparent 40%,
+      rgba(8, 24, 17, 0.3) 100%
+    );
+}
+
+.park-cover-navigation,
+.park-cover-content {
+  width: 100%;
+  max-width: 1280px;
+  margin: 0 auto;
+  padding-left: 40px;
+  padding-right: 40px;
+}
+
+.park-cover-navigation {
+  position: relative;
+  z-index: 2;
+}
+
+.park-cover-content {
+  position: relative;
+  padding-top: 52px;
+  padding-bottom: 56px;
+}
+
+.park-cover-eyebrow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 19px;
+  color: #dce8cf;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 2.5px;
+  text-transform: uppercase;
+}
+
+.park-cover-eyebrow::before {
+  content: "";
+  width: 25px;
+  height: 1px;
+  background: currentColor;
+}
+
+.park-cover h1 {
+  max-width: 950px;
+  margin: 0;
+  color: #fffefa;
+  font-size: clamp(38px, 4.5vw, 68px);
+  font-weight: 800;
+  line-height: 1.1;
+  letter-spacing: -2px;
+  text-wrap: balance;
+}
+
+.park-cover-tagline {
+  max-width: 850px;
+  margin: 15px 0 23px;
+  color: #daef9b;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(26px, 2.8vw, 40px);
+  font-style: italic;
+  line-height: 1.2;
+}
+
+.park-cover-overview {
+  max-width: 660px;
+  margin: 0;
+  color: #eef2e8;
+  font-size: 16px;
+  font-weight: 400;
+  line-height: 1.8;
+}
+
+.park-cover-credit {
+  display: inline-block;
+  max-width: 660px;
+  margin-top: 23px;
+  color: #e0e8d9;
+  font-size: 10px;
+  line-height: 1.6;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  overflow-wrap: anywhere;
+}
+
+.park-cover-status {
+  margin: 16px 0 0;
+  color: #dbe5d2;
+  font-size: 12px;
+}
+
+/* Navigation over the photo */
+
+.destination-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 20px;
+  min-height: 96px;
+  padding: 20px 0;
+  color: #fffefa;
+}
+
+.destination-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-size: 24px;
+  font-weight: 800;
+  letter-spacing: -0.8px;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.destination-brand svg {
+  width: 39px;
+  height: 39px;
+  color: #daef9b;
+}
+
+.destination-search {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  max-width: 100%;
+}
+
+.destination-search input {
+  width: clamp(160px, 20vw, 260px);
+  min-width: 0;
+  padding: 11px 16px;
+  border: 1px solid rgba(255, 255, 255, 0.45);
+  border-radius: 999px;
+  background: rgba(14, 35, 25, 0.28);
+  color: #fffefa;
+  font: inherit;
+  font-size: 13px;
+}
+
+.destination-search input::placeholder {
+  color: #d7e1d0;
+}
+
+.destination-search-submit {
+  padding: 12px 20px;
+  border: 0;
+  border-radius: 999px;
+  background: #daef9b;
+  color: #243e30;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.destination-search-submit:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.destination-home {
+  padding: 10px 0 10px 6px;
+  border: 0;
+  background: transparent;
+  color: #fffefa;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.destination-nav :focus-visible,
+.park-cover-credit:focus-visible {
+  outline: 3px solid #daef9b;
+  outline-offset: 4px;
+}
+
+/* Header shown while the first guide loads */
+
+.destination-loading-header {
+  background: #243e30;
+}
+
+.destination-loading-header-inner {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 0 40px;
+}
+
+/* Keep the guide centered beneath the full-width photo */
+
+.destination-guide {
+  width: 100%;
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: 8px 24px 0;
+}
+
+@media (max-width: 700px) {
+  .park-cover {
+    min-height: 590px;
+  }
+
+  .park-cover-navigation,
+  .park-cover-content,
+  .destination-loading-header-inner {
+    padding-left: 22px;
+    padding-right: 22px;
+  }
+
+  .destination-nav {
+    gap: 15px;
+    padding: 20px 0;
+  }
+
+  .destination-brand {
+    font-size: 22px;
+  }
+
+  .destination-search {
+    width: 100%;
+    gap: 8px;
+  }
+
+  .destination-search input {
+    flex: 1;
+    width: 0;
+  }
+
+  .destination-search-submit {
+    padding: 11px 15px;
+  }
+
+  .destination-home {
+    font-size: 12px;
+  }
+
+  .park-cover-content {
+    padding-top: 30px;
+    padding-bottom: 40px;
+  }
+
+  .park-cover h1 {
+    font-size: clamp(36px, 8vw, 52px);
+    letter-spacing: -1.3px;
+  }
+
+  .park-cover-overview {
+    font-size: 14px;
+    line-height: 1.75;
+  }
+
+  .park-cover-overlay {
+    background:
+      linear-gradient(
+        90deg,
+        rgba(15, 44, 30, 0.9),
+        rgba(15, 44, 30, 0.42)
+      ),
+      linear-gradient(
+        0deg,
+        rgba(8, 24, 17, 0.35),
+        transparent
+      );
+  }
+
+  .destination-guide {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+}

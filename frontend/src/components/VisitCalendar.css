@@ -1,0 +1,282 @@
+.tm-calendar,
+.tm-calendar * {
+  box-sizing: border-box;
+}
+
+.tm-calendar {
+  position: relative;
+  width: 100%;
+  color: #243e30;
+  font-family: inherit;
+}
+
+.tm-calendar button {
+  font: inherit;
+  cursor: pointer;
+}
+
+.tm-calendar-trigger {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 50px;
+  padding: 12px 16px;
+  border: 1px solid #b8c4ad;
+  border-radius: 10px;
+  background: #fafbf5;
+  color: #243e30;
+  list-style: none;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.tm-calendar-trigger::-webkit-details-marker {
+  display: none;
+}
+
+.tm-calendar-trigger > svg {
+  flex-shrink: 0;
+}
+
+.tm-calendar-chevron {
+  margin-left: auto;
+}
+
+.tm-calendar[open] .tm-calendar-trigger {
+  border-color: #243e30;
+  box-shadow: 0 0 0 2px rgb(36 62 48 / 8%);
+}
+
+.tm-calendar-popover {
+  position: absolute;
+  top: calc(100% + 10px);
+  left: 0;
+  z-index: 40;
+  width: min(330px, calc(100vw - 64px));
+  padding: 18px;
+  border: 1px solid #d7dfcf;
+  border-radius: 16px;
+  background: #fffefa;
+  box-shadow: 0 16px 45px rgb(22 45 30 / 18%);
+}
+
+.tm-calendar-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.tm-calendar-heading h3 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.tm-calendar-heading button {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  border: 1px solid #d7dfcf;
+  border-radius: 8px;
+  background: transparent;
+  color: #243e30;
+  font-size: 25px;
+  line-height: 1;
+}
+
+.tm-calendar-heading button:not(:disabled):hover {
+  background: #edf2e4;
+}
+
+.tm-calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 4px;
+}
+
+.tm-calendar-weekday {
+  padding-bottom: 8px;
+  color: #77836f;
+  text-align: center;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.tm-calendar-day {
+  width: 100%;
+  aspect-ratio: 1;
+  padding: 0;
+  border: 1px solid transparent;
+  border-radius: 50%;
+  background: transparent;
+  color: #243e30;
+  font-size: 13px;
+}
+
+.tm-calendar-day:not(:disabled):hover {
+  background: #e5efcf;
+}
+
+.tm-calendar-day.is-today {
+  border-color: #93af65;
+}
+
+.tm-calendar-day.is-selected,
+.tm-calendar-day.is-selected:hover {
+  border-color: #243e30;
+  background: #243e30;
+  color: #fff;
+}
+
+.tm-calendar button:disabled {
+  opacity: 0.3;
+  cursor: default;
+}
+
+.tm-calendar :focus-visible {
+  outline: 3px solid #a8c96b;
+  outline-offset: 3px;
+}
+
+.tm-calendar-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid #e5e9de;
+  color: #78836f;
+  font-size: 11px;
+}
+
+.tm-calendar-footer button {
+  padding: 5px 10px;
+  border: 0;
+  border-radius: 6px;
+  background: #eaf1db;
+  color: #243e30;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+/* The visit bar below the park photo */
+
+.tm-visit-bar {
+  position: relative;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 18px;
+  margin: 20px 0 24px;
+  padding: 18px 20px;
+  border: 1px solid #d1dac6;
+  border-radius: 16px;
+  background: #f7f8f2;
+  color: #243e30;
+}
+
+.tm-visit-label {
+  padding-right: 20px;
+  border-right: 1px solid #c9d3bd;
+}
+
+.tm-visit-label strong {
+  display: block;
+  font-size: 18px;
+}
+
+.tm-visit-label span {
+  display: block;
+  margin-top: 3px;
+  color: #77836f;
+  font-size: 12px;
+}
+
+.tm-visit-date {
+  flex: 1 1 250px;
+  max-width: 360px;
+}
+
+.tm-update-guide {
+  min-height: 50px;
+  margin-left: auto;
+  padding: 12px 20px;
+  border: 0;
+  border-radius: 10px;
+  background: #daef9b;
+  color: #243e30;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.tm-update-guide:not(:disabled):hover {
+  background: #cce689;
+}
+
+.tm-update-guide:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+
+.tm-update-guide:focus-visible {
+  outline: 3px solid #94b762;
+  outline-offset: 3px;
+}
+
+.tm-visit-note {
+  flex-basis: 100%;
+  margin: 0;
+  color: #737e69;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.tm-status-message {
+  margin: 0 0 20px;
+  padding: 12px 16px;
+  border: 1px solid #d5dfc5;
+  border-radius: 12px;
+  background: #edf3e3;
+  color: #354a2e;
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.tm-status-message.is-error {
+  border-color: #edcfbc;
+  background: #fff4eb;
+  color: #873d20;
+}
+
+@media (max-width: 640px) {
+  .tm-visit-bar {
+    align-items: stretch;
+    gap: 14px;
+    padding: 16px;
+  }
+
+  .tm-visit-label {
+    width: 100%;
+    padding-right: 0;
+    border-right: 0;
+  }
+
+  .tm-visit-date {
+    flex-basis: 100%;
+    max-width: none;
+  }
+
+  .tm-update-guide {
+    width: 100%;
+    margin-left: 0;
+  }
+}

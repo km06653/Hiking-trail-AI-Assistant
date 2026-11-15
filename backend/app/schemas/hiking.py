@@ -3,10 +3,6 @@ from datetime import date
 from pydantic import BaseModel, Field
 
 
-# ==========================================
-# HIKING REQUEST
-# ==========================================
-
 class HikingRequest(BaseModel):
     message: str = Field(
         description="Natural-language hiking request from the user"
@@ -16,17 +12,17 @@ class HikingRequest(BaseModel):
     trailhead_name: str | None = None
 
     latitude: float | None = Field(
-        default=None, ge=-90, le=90
+        default=None,
+        ge=-90,
+        le=90,
     )
 
     longitude: float | None = Field(
-        default=None, ge=-180, le=180
+        default=None,
+        ge=-180,
+        le=180,
     )
 
-
-# ==========================================
-# TRAIL INFORMATION
-# ==========================================
 
 class Trail(BaseModel):
     name: str = Field(
@@ -62,10 +58,6 @@ class Trail(BaseModel):
     )
 
 
-# ==========================================
-# PACKING LIST
-# ==========================================
-
 class PackingItem(BaseModel):
     item: str = Field(
         description="Item to bring"
@@ -79,10 +71,6 @@ class PackingItem(BaseModel):
         description="Whether this is essential"
     )
 
-
-# ==========================================
-# PARK RULES
-# ==========================================
 
 class ParkRule(BaseModel):
     rule: str = Field(
@@ -102,18 +90,10 @@ class ParkRule(BaseModel):
     )
 
 
-# ==========================================
-# SAFETY INFORMATION
-# ==========================================
-
 class SafetyTip(BaseModel):
     title: str
     description: str
 
-
-# ==========================================
-# NEARBY LOCATIONS
-# ==========================================
 
 class NearbyLocation(BaseModel):
     name: str
@@ -121,19 +101,11 @@ class NearbyLocation(BaseModel):
     description: str
 
 
-# ==========================================
-# CITATIONS
-# ==========================================
-
 class HikingCitation(BaseModel):
     title: str
     url: str
     source_type: str
 
-
-# ==========================================
-# WEATHER INFORMATION
-# ==========================================
 
 class WeatherInfo(BaseModel):
     trailhead_name: str
@@ -150,20 +122,19 @@ class WeatherInfo(BaseModel):
 
     temperature_unit: str = "°F"
     wind_speed_unit: str = "mph"
-
     source: str = "Open-Meteo"
 
-
-# ==========================================
-# COMPLETE HIKING RESPONSE
-# ==========================================
 
 class HikingResponse(BaseModel):
     destination: str
     overview: str
 
     hero_image: str = Field(
-        description="A real, working public URL to a beautiful, high-quality image of this specific destination (e.g., from Wikimedia Commons)."
+        description=(
+            "A real, working public URL to a beautiful, "
+            "high-quality image of this specific destination "
+            "(e.g., from Wikimedia Commons)."
+        )
     )
 
     trails: list[Trail]
@@ -171,6 +142,12 @@ class HikingResponse(BaseModel):
     park_rules: list[ParkRule]
     safety_tips: list[SafetyTip]
     nearby_locations: list[NearbyLocation]
+
+    # Assigned by the backend after guide generation.
+    hike_date: str | None = None
+    weather_status: str = "unavailable"
+    weather_message: str | None = None
+    packing_status: str = "general"
 
     weather: WeatherInfo | None = None
 

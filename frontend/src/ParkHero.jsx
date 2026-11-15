@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import './ParkHero.css'
 
 const parkNames = [
   ['point lobos', 'Point Lobos'],
@@ -39,12 +40,19 @@ async function wikiRequest(params, signal) {
 }
 
 function plainText(value) {
-  return new DOMParser()
-    .parseFromString(value || '', 'text/html')
-    .body.textContent?.trim() || ''
+  return (
+    new DOMParser()
+      .parseFromString(value || '', 'text/html')
+      .body.textContent?.trim() || ''
+  )
 }
 
-export default function ParkHero({ destination, title, overview }) {
+export default function ParkHero({
+  destination,
+  title,
+  overview,
+  navigation,
+}) {
   const [photo, setPhoto] = useState(null)
   const [credits, setCredits] = useState(null)
   const [status, setStatus] = useState('loading')
@@ -60,13 +68,15 @@ export default function ParkHero({ destination, title, overview }) {
     async function loadPhoto() {
       try {
         const name = destination?.trim()
-        if (!name) throw new Error('Missing destination')
+
+        if (!name) {
+          throw new Error('Missing destination')
+        }
 
         const matchedTitle = parkNames.find(([match]) =>
           name.toLowerCase().includes(match)
         )?.[1]
 
-        // First try the park's exact article.
         let data = await wikiRequest(
           {
             titles: matchedTitle || name,
@@ -81,7 +91,6 @@ export default function ParkHero({ destination, title, overview }) {
 
         let page = data.query?.pages?.[0]
 
-        // Search if there was no photo on the exact article.
         if (!page?.thumbnail?.source && !page?.original?.source) {
           data = await wikiRequest(
             {
@@ -99,12 +108,14 @@ export default function ParkHero({ destination, title, overview }) {
 
           page = [...(data.query?.pages || [])]
             .sort((a, b) => (a.index ?? 99) - (b.index ?? 99))
-            .find((item) =>
-              item.thumbnail?.source || item.original?.source
+            .find(
+              (item) =>
+                item.thumbnail?.source || item.original?.source
             )
         }
 
-        const imageUrl = page?.thumbnail?.source || page?.original?.source
+        const imageUrl =
+          page?.thumbnail?.source || page?.original?.source
 
         if (!imageUrl) {
           throw new Error(`No photo found for ${name}`)
@@ -112,17 +123,22 @@ export default function ParkHero({ destination, title, overview }) {
 
         if (!active) return
 
-        // Show the image immediately.
         setPhoto({
           url: imageUrl,
           originalUrl: page.original?.source,
-          creditUrl: `https://en.wikipedia.org/wiki/File:${encodeURIComponent(
-            page.pageimage
-          )}`,
+          creditUrl: page.pageimage
+            ? `https://en.wikipedia.org/wiki/File:${encodeURIComponent(
+                page.pageimage
+              )}`
+            : `https://en.wikipedia.org/wiki/${encodeURIComponent(
+                page.title || name
+              )}`,
         })
+
         setStatus('ready')
 
-        // Credits are optional: failure here must not hide the photo.
+        if (!page.pageimage) return
+
         try {
           const creditData = await wikiRequest(
             {
@@ -133,7 +149,8 @@ export default function ParkHero({ destination, title, overview }) {
             controller.signal
           )
 
-          const info = creditData.query?.pages?.[0]?.imageinfo?.[0]
+          const info =
+            creditData.query?.pages?.[0]?.imageinfo?.[0]
 
           if (active && info) {
             setCredits({
@@ -165,8 +182,7 @@ export default function ParkHero({ destination, title, overview }) {
     }
   }, [destination])
 
-  const handleImageError = () => {
-    // Try the original image if the thumbnail fails.
+  function handleImageError() {
     if (photo?.originalUrl && photo.url !== photo.originalUrl) {
       setPhoto((current) => ({
         ...current,
@@ -179,55 +195,54 @@ export default function ParkHero({ destination, title, overview }) {
   }
 
   return (
-    <section
-      className="relative w-full rounded-3xl mb-8 overflow-hidden shadow-xl"
-      style={{ backgroundColor: '#2e4b3e' }}
-    >
+    <section className="park-cover">
       {photo && (
         <img
           key={photo.url}
           src={photo.url}
           alt={`${destination} scenery`}
           onError={handleImageError}
-          className="absolute inset-0 w-full h-full object-cover"
+          className="park-cover-photo"
+          decoding="async"
+          fetchPriority="high"
         />
       )}
 
-      <div
-        className="absolute inset-0"
-        style={{
-          background:
-            'linear-gradient(to top, rgba(0,0,0,.88), rgba(0,0,0,.25) 65%, rgba(0,0,0,.08))',
-        }}
-      />
+      <div className="park-cover-overlay" aria-hidden="true" />
 
-      <div
-        className="relative z-10 flex flex-col justify-end p-8 md:p-12"
-        style={{ minHeight: '380px', color: '#fff' }}
-      >
+      <div className="park-cover-navigation">
+        {navigation}
+      </div>
+
+      <div className="park-cover-content">
+        <div className="park-cover-eyebrow">
+          Find your kind of outside
+        </div>
+
+        <h1>{title || destination}</h1>
+
+        <p className="park-cover-tagline">
+          A great day outside starts here.
+        </p>
+
+        <p className="park-cover-overview">
+          {overview}
+        </p>
+
         {status !== 'ready' && (
-          <p role="status" className="text-sm mb-3">
+          <p role="status" className="park-cover-status">
             {status === 'loading'
               ? `Finding a photo of ${destination}…`
               : `Photo unavailable for ${destination}`}
           </p>
         )}
 
-        <h2 className="text-4xl md:text-5xl font-extrabold mb-3">
-          {title || destination}
-        </h2>
-
-        <p className="text-lg max-w-3xl font-medium leading-relaxed">
-          {overview}
-        </p>
-
         {photo && (
           <a
             href={credits?.url || photo.creditUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="self-start mt-4 text-xs underline"
-            style={{ color: '#fff' }}
+            className="park-cover-credit"
           >
             Photo: {credits?.author || 'View photo credits'}
             {credits?.license ? ` · ${credits.license}` : ''}
