@@ -1,13 +1,14 @@
+
 import { useRef, useState } from 'react'
 import './index.css'
 import TrailMateHero from './TrailMateHero'
 import TrailMateChat from './components/TrailMateChat'
 import ParkHero from './ParkHero'
-import LoadingGuide from './components/LoadingGuide'
 import VisitCalendar, {
   localDateString,
   formatVisitDate,
 } from './components/VisitCalendar'
+import TrailMap from './components/TrailMap'
 
 const API_BASE = 'http://localhost:8000'
 
@@ -280,16 +281,6 @@ function App() {
     )
   }
 
-  if (isLoading && !guide) {
-    return (
-      <LoadingGuide
-        destination={searchQuery}
-        visitDate={visitDate}
-        onHome={resetSearch}
-      />
-    )
-  }
-
   return (
     <div className="min-h-screen bg-sand text-bark font-sans pb-20">
       {guide ? (
@@ -309,6 +300,27 @@ function App() {
       )}
 
       <main className="destination-guide">
+        {isLoading && !guide && (
+          <div
+            className="mt-20 flex flex-col items-center animate-pulse text-center"
+            role="status"
+          >
+            <div className="text-6xl mb-6">🏕️</div>
+
+            <h2 className="text-3xl font-bold text-forest mb-4">
+              Gemini is researching {searchQuery}…
+            </h2>
+
+            <p className="text-sage text-lg">
+              Planning for {formatVisitDate(visitDate)}.
+            </p>
+
+            <p className="text-sage mt-2">
+              Gathering weather, park information, and trail details.
+            </p>
+          </div>
+        )}
+
         {errorMessage && (
           <div
             className="tm-status-message is-error mt-6"
@@ -386,8 +398,16 @@ function App() {
               </div>
             )}
 
+            {/* Destination Map */}
+            <TrailMap
+              destination={guide.destination}
+              latitude={guide.destination_latitude}
+              longitude={guide.destination_longitude}
+            />
+
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <div className="md:col-span-2 flex flex-col gap-6">
+                {/* Trails */}
                 <section className="bg-white p-6 rounded-3xl shadow-sm border border-sage/20">
                   <h2 className="text-2xl font-bold text-forest mb-5">
                     🥾 Top Trails
@@ -431,6 +451,7 @@ function App() {
                   ))}
                 </section>
 
+                {/* Safety */}
                 <section className="bg-white p-6 rounded-3xl shadow-sm border border-sage/20">
                   <h2 className="text-2xl font-bold text-forest mb-5">
                     ⚠️ Safety Tips
@@ -456,6 +477,7 @@ function App() {
               </div>
 
               <div className="flex flex-col gap-6">
+                {/* Visit Forecast */}
                 <section className="bg-white p-6 rounded-3xl shadow-sm border border-sage/20">
                   <h2 className="text-xl font-bold text-forest mb-3">
                     ☀️ Visit Forecast
@@ -505,6 +527,7 @@ function App() {
                   )}
                 </section>
 
+                {/* Packing List */}
                 <section className="bg-forest text-sand p-6 rounded-3xl shadow-sm">
                   <h2 className="text-xl font-bold mb-4">
                     🎒 Packing List
@@ -536,6 +559,7 @@ function App() {
                   </ul>
                 </section>
 
+                {/* Park Rules */}
                 <section className="bg-white p-6 rounded-3xl shadow-sm border border-sage/20">
                   <h2 className="text-xl font-bold text-forest mb-4">
                     📜 Park Rules
