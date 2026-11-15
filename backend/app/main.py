@@ -7,7 +7,11 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.schemas.hiking import HikingRequest, HikingResponse, WeatherInfo
 from app.schemas.chat import ChatRequest, ChatResponse
 
-from app.services.gemini_service import generate_hiking_guide
+from app.services.gemini_service import (
+    generate_hiking_guide,
+    generate_weather_aware_packing_list,
+)
+
 from app.services.weather_service import get_weather, get_coordinates
 from app.services.chat_service import generate_chat_response
 
@@ -55,6 +59,7 @@ def get_trailhead_weather(
 
     except Exception as error:
         print(f"Weather error: {error}")
+
         raise HTTPException(
             status_code=502,
             detail="Unable to retrieve weather forecast."
@@ -64,22 +69,24 @@ def get_trailhead_weather(
 # Main hiking guide endpoint
 @app.post("/api/hike-guide", response_model=HikingResponse)
 def create_hiking_guide(request: HikingRequest):
+
     try:
+        # Step 1: Generate the initial hiking guide
         result = generate_hiking_guide(request.message)
+
         result["weather"] = None
 
+        # Step 2: Retrieve weather information
         try:
-            # Extract the destination from Gemini's response.
             destination = result["destination"]
 
-            # Find the destination coordinates.
             location = get_coordinates(destination)
 
-            # If no date was provided, use today's date.
+            # Use today's date if the user did not provide one
             weather_date = request.hike_date or date.today()
 
             try:
-                # First attempt: retrieve weather for the requested date.
+                # First attempt: requested hiking date
                 result["weather"] = get_weather(
                     latitude=location["latitude"],
                     longitude=location["longitude"],
@@ -88,14 +95,17 @@ def create_hiking_guide(request: HikingRequest):
                 )
 
             except Exception as forecast_error:
-                print(f"Requested weather forecast failed: {forecast_error}")
+                print(
+                    f"Requested weather forecast failed: {forecast_error}"
+                )
 
-                # Second attempt: fall back to today's weather
-                # if the requested date was different from today.
+                # Fall back to today's forecast if necessary
                 today = date.today()
 
                 if weather_date != today:
-                    print("Attempting to retrieve today's weather instead.")
+                    print(
+                        "Attempting to retrieve today's weather instead."
+                    )
 
                     result["weather"] = get_weather(
                         latitude=location["latitude"],
@@ -111,20 +121,55 @@ def create_hiking_guide(request: HikingRequest):
             print(f"Weather error: {weather_error}")
             result["weather"] = None
 
+        # Step 3: Generate a weather-aware packing list
+        if result["weather"] is not None:
+
+            try:
+                print(
+                    "Generating weather-aware packing recommendations..."
+                )
+
+                updated_packing_list = generate_weather_aware_packing_list(
+                    hiking_guide=result,
+                    weather=result["weather"]
+                )
+
+                result["packing_list"] = updated_packing_list
+
+                print(
+                    "Weather-aware packing list generated successfully."
+                )
+
+            except Exception as packing_error:
+                print(
+                    f"Weather-aware packing generation failed: {packing_error}"
+                )
+
+                print(
+                    "Keeping the original packing list as a fallback."
+                )
+
+        else:
+            print(
+                "Weather unavailable. Keeping the original packing list."
+            )
+
+        # Step 4: Return the completed hiking guide
         return result
 
     except Exception as error:
         print(f"Gemini error: {error}")
+
         raise HTTPException(
             status_code=502,
             detail="Unable to generate hiking guide."
         )
 
 
-
 # AI hiking chatbot endpoint
 @app.post("/api/chat", response_model=ChatResponse)
 def chat_with_assistant(request: ChatRequest):
+
     try:
         response = generate_chat_response(
             user_message=request.message,
@@ -141,6 +186,7 @@ def chat_with_assistant(request: ChatRequest):
 
     except Exception as error:
         print(f"Chat error: {error}")
+
         raise HTTPException(
             status_code=502,
             detail="Unable to generate chat response."
