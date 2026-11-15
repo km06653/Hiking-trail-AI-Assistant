@@ -1,3 +1,4 @@
+
 from datetime import date
 
 from pydantic import BaseModel, Field
@@ -127,6 +128,11 @@ class WeatherInfo(BaseModel):
 
 class HikingResponse(BaseModel):
     destination: str
+
+    # Coordinates used by the frontend destination map.
+    destination_latitude: float | None = None
+    destination_longitude: float | None = None
+
     overview: str
 
     hero_image: str = Field(

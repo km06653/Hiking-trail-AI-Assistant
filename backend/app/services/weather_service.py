@@ -1,12 +1,55 @@
+
 from datetime import date
+import logging
 import math
+import os
 import re
 
 import httpx
+import httpcore
 
+
+logger = logging.getLogger(__name__)
 
 OPEN_METEO_URL = "https://api.open-meteo.com/v1/forecast"
 GEOCODING_URL = "https://geocoding-api.open-meteo.com/v1/search"
+
+# Temporary fallback IP tested successfully with curl and httpx.
+# Can be changed through the OPEN_METEO_FALLBACK_IP environment variable.
+OPEN_METEO_FALLBACK_IP = os.getenv(
+    "OPEN_METEO_FALLBACK_IP",
+    "94.130.142.35",
+)
+
+
+class OpenMeteoFallbackBackend(httpcore.SyncBackend):
+    """
+    Connect to an alternative IP for Open-Meteo while preserving
+    the original hostname for TLS/SNI and certificate verification.
+    """
+
+    def connect_tcp(
+        self,
+        host,
+        port,
+        timeout=None,
+        local_address=None,
+        socket_options=None,
+    ):
+        if host == "api.open-meteo.com":
+            logger.warning(
+                "Using Open-Meteo fallback IP: %s",
+                OPEN_METEO_FALLBACK_IP,
+            )
+            host = OPEN_METEO_FALLBACK_IP
+
+        return super().connect_tcp(
+            host=host,
+            port=port,
+            timeout=timeout,
+            local_address=local_address,
+            socket_options=socket_options,
+        )
 
 
 def get_weather_description(code: int) -> str:
@@ -124,6 +167,76 @@ def get_coordinates(location: str) -> dict:
     )
 
 
+def _request_weather(params: dict) -> httpx.Response:
+    """
+    Request the forecast using the normal endpoint first.
+
+    If the connection fails, retry through the alternative IP.
+    The original hostname remains in the URL, preserving TLS
+    hostname verification and SNI.
+    """
+
+    timeout = httpx.Timeout(
+        30.0,
+        connect=15.0,
+    )
+
+    # First attempt: normal DNS resolution.
+    try:
+        logger.info("Requesting weather from Open-Meteo normally.")
+
+        response = httpx.get(
+            OPEN_METEO_URL,
+            params=params,
+            timeout=timeout,
+        )
+
+        response.raise_for_status()
+        return response
+
+    except (httpx.ConnectError, httpx.ConnectTimeout) as error:
+        logger.warning(
+            "Normal Open-Meteo connection failed: %s. "
+            "Trying fallback IP.",
+            error,
+        )
+
+    # Second attempt: alternative IP, with the original hostname
+    # retained for TLS/SNI and certificate verification.
+    transport = httpx.HTTPTransport(
+        retries=0,
+        verify=True,
+    )
+
+    # Install the custom TCP connection backend.
+    transport._pool._network_backend = OpenMeteoFallbackBackend()
+
+    try:
+        with httpx.Client(
+            transport=transport,
+            timeout=timeout,
+        ) as client:
+
+            response = client.get(
+                OPEN_METEO_URL,
+                params=params,
+            )
+
+            response.raise_for_status()
+
+            logger.info(
+                "Weather successfully retrieved through fallback IP."
+            )
+
+            return response
+
+    except Exception:
+        logger.exception(
+            "Open-Meteo fallback connection also failed."
+        )
+        raise
+
+
 def get_weather(
     latitude: float,
     longitude: float,
@@ -154,18 +267,12 @@ def get_weather(
         "end_date": requested_date,
     }
 
-    response = httpx.get(
-        OPEN_METEO_URL,
-        params=params,
-        timeout=httpx.Timeout(30.0, connect=20.0),
-    )
+    response = _request_weather(params)
 
     if response.status_code == 400:
         raise ValueError(
             "The weather provider rejected the selected-date request."
         )
-
-    response.raise_for_status()
 
     data = response.json()
     daily = data.get("daily", {})

@@ -1,3 +1,4 @@
+
 from datetime import date
 import logging
 
@@ -84,12 +85,16 @@ def create_hiking_guide(request: HikingRequest):
 
         result = generate_hiking_guide(prompt)
 
-        # These values come from the backend, not Gemini.
+        # Initialize backend-controlled response fields.
         result["hike_date"] = date_string
         result["weather"] = None
         result["weather_status"] = "unavailable"
         result["weather_message"] = None
         result["packing_status"] = "general"
+
+        # Initialize destination coordinates for the frontend map.
+        result["destination_latitude"] = None
+        result["destination_longitude"] = None
 
         try:
             # Prefer exact coordinates if the request provides them.
@@ -104,6 +109,11 @@ def create_hiking_guide(request: HikingRequest):
                 }
             else:
                 location = get_coordinates(result["destination"])
+
+            # Save coordinates before requesting weather.
+            # The map can still work if the weather request fails.
+            result["destination_latitude"] = location["latitude"]
+            result["destination_longitude"] = location["longitude"]
 
             weather = get_weather(
                 latitude=location["latitude"],
@@ -126,7 +136,7 @@ def create_hiking_guide(request: HikingRequest):
 
         except Exception as error:
             logger.warning(
-                "Weather lookup failed for %s: %s",
+                "Weather or location lookup failed for %s: %s",
                 date_string,
                 error,
             )
@@ -159,7 +169,7 @@ def create_hiking_guide(request: HikingRequest):
                     error,
                 )
 
-                # Keep the original general list.
+                # Keep the original general packing list.
                 result["packing_status"] = "general"
 
         return result
